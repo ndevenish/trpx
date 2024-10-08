@@ -28,6 +28,7 @@ int main(int argc, char const* argv[]) {
   parser.add_argument("-v", "--verbose")
       .help("print compressed filenames, compute times and compression rate")
       .flag();
+  parser.add_argument("--remove").help("Remove files after compression").flag();
   parser.add_argument("files")
       .help("Files to Compress to TRPX")
       .nargs(argparse::nargs_pattern::at_least_one)
@@ -97,9 +98,11 @@ int main(int argc, char const* argv[]) {
 
         compressed.write(trpx_file);
         trpx_file.close();
-        std::cout << "Deleting original TIFF file: " << tif_filename
-                  << std::endl;
-        fs::remove(tif_filename);
+        if (parser["--remove"] == true) {
+          std::cout << "Deleting original TIFF file: " << tif_filename
+                    << std::endl;
+          fs::remove(tif_filename);
+        }
         ++compressed_files;
 
         auto end_user_time = std::chrono::high_resolution_clock::now();
