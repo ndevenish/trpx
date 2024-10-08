@@ -57,7 +57,7 @@ int main(int argc, char const* argv[]) {
   std::size_t compressed_files = 0;
 
   // Loop over all input file names
-  for (fs::path tif_filename : input.params()) {
+  for (fs::path tif_filename : input_files) {
     if (fs::is_regular_file(tif_filename) &&
         (tif_filename.extension() == ".tiff" ||
          tif_filename.extension() == ".tif" ||
