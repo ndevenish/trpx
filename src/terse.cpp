@@ -4,34 +4,47 @@
 //
 //  Revised by Jan Pieter Abrahams on 19.03.23.
 //
-
+#include <vector>
+#include <string>
 #include <iostream>
 #include <chrono>
 #include <cmath>
 #include <filesystem>
 #include "Terse.hpp"
-#include "Command_line.hpp"
 #include "Grey_tif.hpp"
 
+#include <argparse/argparse.hpp>
+
 namespace fs = std::filesystem;
+using namespace jpa;
 
 template <typename T> void Terse_pushback(jpa::Terse&, jpa::Grey_tif_image<T> const&);
 
 int main(int argc, char const* argv[]) {
-    using namespace jpa;
-    Command_line_option help("-help", "print help");
-    Command_line_option verbose("-verbose", "print compressed filenames, compute times and compression rate");
-    Command_line input(argc, argv, {help, verbose});
-    if (input.option("-help").found()) {
-        std::cout << "terse [-help] [-verbose] [file ...]\n";
-        std::cout << "  compresses all files with .tiff or .tif extensions to terse files with .trpx extensions.\n";
-        std::cout << "Examples:\n";
-        std::cout << "   terse *                   // all tiff files in this directory are compressed to trpx files.\n";
-        std::cout << "   terse ˜/dir/my_img*       // compresses all tiff files in the directory ~/dir that start with my_img\n";
-        std::cout << "\nkeywords:\n";
-        std::cout << input.help() << std::endl;
-        return 0;
-    }
+    argparse::ArgumentParser parser("terse", "1.0.1", argparse::default_arguments::help);
+    parser.add_argument("-v", "--verbose")
+        .help("print compressed filenames, compute times and compression rate")
+        .flag();
+    parser.add_argument("files")
+        .help("Files to Compress to TRPX")
+        .nargs(argparse::nargs_pattern::at_least_one)
+        .remaining();
+    parser.parse_args(argc, argv);
+
+    auto input_files = parser.get<std::vector<std::string>>("files");
+
+    // Command_line_option help("-help", "print help");
+    // Command_line input(argc, argv, {help, verbose});
+    // if (input.option("-help").found()) {
+    //     std::cout << "terse [-help] [-verbose] [file ...]\n";
+    //     std::cout << "  compresses all files with .tiff or .tif extensions to terse files with .trpx extensions.\n";
+    //     std::cout << "Examples:\n";
+    //     std::cout << "   terse *                   // all tiff files in this directory are compressed to trpx files.\n";
+    //     std::cout << "   terse ˜/dir/my_img*       // compresses all tiff files in the directory ~/dir that start with my_img\n";
+    //     std::cout << "\nkeywords:\n";
+    //     std::cout << input.help() << std::endl;
+    //     return 0;
+    // }
     
     // Some timers and counters are required for the 'verbose' option.
     std::chrono::duration<double> user_time(0);
@@ -91,8 +104,8 @@ int main(int argc, char const* argv[]) {
         }
     }
     // If required, provide verbose output
-    if (input.option("-verbose").found()) {
-        for (fs::path tif_filename : input.params()) 
+    if (parser["--verbose"] == true) {
+        for (fs::path tif_filename : input_files) 
             std::cout << "Compressed: " << tif_filename << std::endl;
         std::cout << "Terse compressed: " << compressed_files << " files\n";
         std::cout << "User time       : " << user_time.count() << " seconds\n";
